@@ -438,9 +438,10 @@ class HopSkipJump(EvasionAttack):
             epsilon = 2.0 * dist / np.sqrt(self.curr_iter + 1)
             success = False
 
+
             while not success:
                 epsilon /= 2.0
-                potential_sample = current_sample + epsilon * update
+                potential_sample = (current_sample + epsilon * update).astype(current_sample.dtype)
                 success = self._adversarial_satisfactory(  # type: ignore
                     samples=potential_sample[None],
                     target=target,
@@ -498,6 +499,9 @@ class HopSkipJump(EvasionAttack):
 
             if threshold is None:
                 threshold = np.minimum(upper_bound * self.theta, self.theta)
+
+        upper_bound = upper_bound.astype(current_sample.dtype)
+        lower_bound = lower_bound.astype(current_sample.dtype)
 
         # Then start the binary search
         while (upper_bound - lower_bound) > threshold:
@@ -602,7 +606,7 @@ class HopSkipJump(EvasionAttack):
                 keepdims=True,
             )
         )
-        eval_samples = np.clip(current_sample + delta * rnd_noise, clip_min, clip_max)
+        eval_samples = np.clip(current_sample + delta * rnd_noise, clip_min, clip_max, dtype=current_sample.dtype)
         rnd_noise = (eval_samples - current_sample) / delta
 
         # Compute gradient: This is a bit different from the original paper, instead we keep those that are
